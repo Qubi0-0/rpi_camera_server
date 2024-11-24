@@ -1,0 +1,151 @@
+body {
+  background: linear-gradient(
+    270deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #8b00ff
+  );
+  background-size: 1400% 1400%;
+  animation: rainbow 1s ease infinite;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+#content-box {
+  position: relative;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  border: 2px black solid;
+  overflow: hidden;
+}
+
+#content-box img {
+  position: absolute;
+}
+
+.mlg-photos {
+  width: 30vw;
+  height: auto;
+}
+
+#snoop {
+  top: 0vh;
+  left: 0vw;
+}
+
+#frog {
+  width: 33vw;
+  top: 33vh;
+  left: 0vw;
+}
+
+#rekt-bruh {
+  width: 40vw;
+  top: 0vh;
+  left: 30vw;
+}
+
+#dancing-lit {
+  width: 40vw;
+  top: 30vh;
+  left: 32vw;
+}
+
+#shrek {
+  top: 0vh;
+  right: 0;
+}
+
+#pepe {
+  bottom: 0;
+  left: 75vw;
+}
+
+#iluminati {
+  top: 30vh;
+  left: 54vw;
+}
+
+#hitmaker {
+  width: 100vw;
+}
+
+#happy-cat {
+  left: 35vw;
+}
+
+#happy-cat2 {
+  left: 65vw;
+}
+
+/* Foot */
+
+.pagination {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(
+    120deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #8b00ff
+  );
+  background-size: 1400% 1400%;
+  animation: rainbow 1s ease infinite;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.pagination a {
+  color: black;
+  text-decoration: none;
+  padding: 8px 15px;
+  display: inline-block;
+}
+
+.pagination a.active {
+  background: linear-gradient(
+    270deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #8b00ff
+  );
+  background-size: 1400% 1400%;
+  animation: rainbow 1s ease infinite;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.pagination a:hover:not(.active) {
+  color: rgb(255, 0, 0);
+  background: #00ff0d80;
+}

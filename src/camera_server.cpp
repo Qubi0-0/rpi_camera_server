@@ -1,82 +1,163 @@
-#include <libcamera/libcamera.h>
-#include "lib/httplib.h"
-#include <vector>
+#include "../lib/httplib.h"
 #include <iostream>
-#include <iomanip>
-#include <memory>
+#include <fstream>
+#include <sstream>
+#include <mutex>
+#include <string>
+#include <vector>
+#include <filesystem>
 #include <thread>
+#include <chrono>
 
-using namespace libcamera;
-using namespace std::chrono_literals;
+// Mutex to ensure safe access to the frame
+std::mutex frameMutex;
+std::vector<unsigned char> currentFrame; // Store the current frame data as JPEG
 
-static std::shared_ptr<Camera> camera;
+// Function to load the image into currentFrame
+bool loadImage(const std::string &path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (file)
+    {
+        std::vector<unsigned char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        std::lock_guard<std::mutex> lock(frameMutex);
+        currentFrame = std::move(buffer);
+        return true;
+    }
+    else
+    {
+        std::cerr << "Error: Unable to load image from " << path << std::endl;
+        return false;
+    }
+}
 
-int main() {
-    // Initialize the Camera Manager
-    std::unique_ptr<CameraManager> cm = std::make_unique<CameraManager>();
-    cm->start();
+// Function to serve HTML files
+void serveHTML(const std::string &filePath, const httplib::Request &, httplib::Response &res)
+{
+    std::ifstream htmlFile(filePath);
+    if (htmlFile)
+    {
+        std::stringstream buffer;
+        buffer << htmlFile.rdbuf();
+        res.set_content(buffer.str(), "text/html");
+    }
+    else
+    {
+        std::cerr << "Error: " << filePath << " not found" << std::endl;
+        res.status = 404;
+        res.set_content("File not found", "text/plain");
+    }
+}
 
-    // Print out available cameras
-    for (auto const &camera : cm->cameras())
-        std::cout << "camera ID: " << camera->id() << std::endl;
+// Function to serve the latest frame (frame.jpg)
+void serveFrame(const httplib::Request &, httplib::Response &res)
+{
+    std::lock_guard<std::mutex> lock(frameMutex); // Ensure thread safety when accessing currentFrame
+    if (!currentFrame.empty())
+    {
+        res.set_content(reinterpret_cast<const char *>(currentFrame.data()), currentFrame.size(), "image/jpeg");
+    }
+    else
+    {
+        std::cerr << "Error: Frame not available" << std::endl;
+        res.status = 404;
+        res.set_content("Frame not available", "text/plain");
+    }
+}
 
-    // Check if any cameras were found
-    auto cameras = cm->cameras();
-    if (cameras.empty()) {
-        std::string error_msg = "No cameras were identified on the system.";
-        std::cout << error_msg << std::endl;
-        cm->stop();
-        return EXIT_FAILURE;
+// Function to serve CSS files
+void serveCSS(const std::string &filePath, const httplib::Request &, httplib::Response &res)
+{
+    std::ifstream cssFile(filePath);
+    if (cssFile)
+    {
+        std::stringstream buffer;
+        buffer << cssFile.rdbuf();
+        res.set_content(buffer.str(), "text/css");
+    }
+    else
+    {
+        std::cerr << "Error: CSS file not found" << std::endl;
+        res.status = 404;
+        res.set_content("CSS file not found", "text/plain");
+    }
+}
+
+// Function to serve static files (GIFs, audio, etc.)
+void serveStatic(const std::string &filePath, const std::string &contentType, const httplib::Request &, httplib::Response &res)
+{
+    std::ifstream file(filePath, std::ios::binary);
+    if (file)
+    {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        res.set_content(buffer.str(), contentType.c_str());
+    }
+    else
+    {
+        std::cerr << "Error: " << filePath << " not found" << std::endl;
+        res.status = 404;
+        res.set_content("File not found", "text/plain");
+    }
+}
+
+// Function to continuously check and reload the frame.jpg file
+void monitorFrame(const std::string &path)
+{
+    while (true)
+    {
+        loadImage(path);
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // Check every second
+    }
+}
+
+int main()
+{
+    httplib::Server server;
+
+    // Start a thread to monitor and reload the frame.jpg file
+    std::thread frameMonitor(monitorFrame, "../frame.jpg");
+
+    // Serve the index.html when accessing the root ("/")
+    server.Get("/", [](const httplib::Request &req, httplib::Response &res)
+               { serveHTML("../index.html", req, res); });
+
+    // Serve the mlg.html when accessing "/mlg.html"
+    server.Get("/mlg.html", [](const httplib::Request &req, httplib::Response &res)
+               { serveHTML("../mlg.html", req, res); });
+
+    // Serve the current frame ("/frame.jpg")
+    server.Get("/frame.jpg", serveFrame);
+
+    // Serve the CSS file ("/css/style.css")
+    server.Get("/css/style.css", [](const httplib::Request &req, httplib::Response &res)
+               { serveCSS("../css/style.css", req, res); });
+
+    // Serve the mlg.css file ("/css/mlg.css")
+    server.Get("/css/mlg.css", [](const httplib::Request &req, httplib::Response &res)
+               { serveCSS("../css/mlg.css", req, res); });
+
+    // Serve GIF files
+    server.Get("/gifs/(.*)", [](const httplib::Request &req, httplib::Response &res)
+               {
+        std::string filePath = "../gifs/" + req.matches[1].str();
+        serveStatic(filePath, "image/gif", req, res); });
+
+    // Serve audio files
+    server.Get("/audio/(.*)", [](const httplib::Request &req, httplib::Response &res)
+               {
+        std::string filePath = "../audio/" + req.matches[1].str();
+        serveStatic(filePath, "audio/mpeg", req, res); });
+
+    std::cout << "Server running at http://localhost:8080" << std::endl;
+    if (!server.listen("0.0.0.0", 8080))
+    {
+        std::cerr << "Error: Failed to start server" << std::endl;
+        return 1;
     }
 
-    // Get the first camera's ID
-    std::string cameraId = cameras[0]->id();
-    auto camera = cm->get(cameraId);
-
-    // Acquire the camera, moving it to the "Acquired" state
-    int ret = camera->acquire();
-    if (ret < 0) {
-        std::cerr << "Failed to acquire camera" << std::endl;
-        return ret;
-    }
-
-    // Generate the camera configuration for video recording stream
-    std::unique_ptr<CameraConfiguration> config = camera->generateConfiguration({StreamRole::VideoRecording});
-    StreamConfiguration &streamConfig = config->at(0);
-    std::cout << "Default viewfinder configuration is: " << streamConfig.toString() << std::endl;
-
-    // Validate the configuration
-    config->validate();
-    std::cout << "Validated viewfinder configuration is: " << streamConfig.toString() << std::endl;
-
-    // Configure the camera
-    ret = camera->configure(config.get());
-    if (ret < 0) {
-        std::cerr << "Failed to configure camera" << std::endl;
-        camera->release();  // Release the camera resources in case of failure
-        return ret;
-    }
-
-    // Allocate buffers for the configured stream
-    FrameBufferAllocator *allocator = new FrameBufferAllocator(camera);
-    for (StreamConfiguration &cfg : *config) {
-        ret = allocator->allocate(cfg.stream());
-        if (ret < 0) {
-            std::cerr << "Can't allocate buffers" << std::endl;
-            return -ENOMEM;
-        }
-
-        size_t allocated = allocator->buffers(cfg.stream()).size();
-        std::cout << "Allocated " << allocated << " buffers for stream" << std::endl;
-    }
-
-	Stream *stream = streamConfig.stream();
-	const std::vector<std::unique_ptr<FrameBuffer>> &buffers = allocator->buffers(stream);
-	std::vector<std::unique_ptr<Request>> requests;
-
-
-	//Release the camera resources when done
-	camera->release();
+    // Join the frame monitor thread before exiting
+    frameMonitor.join();
 
     return 0;
 }

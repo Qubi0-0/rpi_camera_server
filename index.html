@@ -13,20 +13,20 @@
     <header></header>
     <main>
       <div class="pagination">
-        <a href="index.html" class="active">index</a>
+        <a href="/" class="active">index</a>
         <!-- <a href="about.html">about</a>
         <a href="garbage.html">garbage</a> -->
-        <a href="mlg.html">MLG</a> 
+        <a href="/mlg.html">MLG</a>
       </div>
-        <h1>Camera Stream</h1>
-        <img id="camera-stream" src="/frame.jpg" alt="Camera stream" />
-        <script>
-            // Regularly update the image to get the latest frame
-            setInterval(() => {
-                const img = document.getElementById('camera-stream');
-                img.src = '/frame.jpg?timestamp=' + new Date().getTime();
-            }, 100); // Update every 100ms
-        </script>
+      <h1>Camera Stream</h1>
+      <img id="camera-stream" src="/frame.jpg" alt="Camera stream" />
+      <script>
+        // Regularly update the image to get the latest frame
+        setInterval(() => {
+          const img = document.getElementById("camera-stream");
+          img.src = `/frame.jpg?timestamp=${new Date().getTime()}`; // Cache-busting query parameter
+        }, 1000); // Update every 1000ms (1 second)
+      </script>
     </main>
     <footer></footer>
   </body>
