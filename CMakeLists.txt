@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(
     /usr/include/libcamera
-    /path/to/cpp-httplib
+    /lib/cpp-httplib
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
@@ -23,4 +23,6 @@ target_link_libraries(camera_server
     pthread
     ssl
     crypto
+    camera 
+    camera-base
 )
