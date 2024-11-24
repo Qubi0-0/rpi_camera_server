@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Nic właściwie wartościowego" />
+    <link rel="icon" type="images/png" href="images/bin.png" />
+    <title>Main site</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+    <header></header>
+    <main>
+      <div class="pagination">
+        <a href="index.html" class="active">index</a>
+        <!-- <a href="about.html">about</a>
+        <a href="garbage.html">garbage</a> -->
+        <a href="mlg.html">MLG</a> 
+      </div>
+        <h1>Camera Stream</h1>
+        <img id="camera-stream" src="/frame.jpg" alt="Camera stream" />
+        <script>
+            // Regularly update the image to get the latest frame
+            setInterval(() => {
+                const img = document.getElementById('camera-stream');
+                img.src = '/frame.jpg?timestamp=' + new Date().getTime();
+            }, 100); // Update every 100ms
+        </script>
+    </main>
+    <footer></footer>
+  </body>
+</html>
