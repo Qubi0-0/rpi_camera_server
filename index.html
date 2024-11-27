@@ -19,15 +19,116 @@
         <a href="/mlg.html">MLG</a>
       </div>
       <h1>Camera Stream</h1>
-      <img id="camera-stream" src="/frame.jpg" alt="Camera stream" />
-      <script>
-        // Regularly update the image to get the latest frame
-        setInterval(() => {
-          const img = document.getElementById("camera-stream");
-          img.src = `/frame.jpg?timestamp=${new Date().getTime()}`; // Cache-busting query parameter
-        }, 1000); // Update every 1000ms (1 second)
-      </script>
+      <div class="photo-section">
+        <div class="photo-item">
+          <p class="photo-title">frame at 1000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-1000"
+            src="/frames/frame_1000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 5000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-5000"
+            src="/frames/frame_5000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 10000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-10000"
+            src="/frames/frame_10000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 20000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-20000"
+            src="/frames/frame_20000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 50000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-50000"
+            src="/frames/frame_50000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 100000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-100000"
+            src="/frames/frame_100000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 200000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-200000"
+            src="/frames/frame_200000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 500000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-500000"
+            src="/frames/frame_500000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+        <div class="photo-item">
+          <p class="photo-title">frame at 1000000 µs exposure</p>
+          <img
+            class="camera-stream"
+            id="frame-1000000"
+            src="/frames/frame_1000000-µs.jpg"
+            alt="Camera stream"
+          />
+        </div>
+      </div>
     </main>
     <footer></footer>
+    <script>
+      // Function to update the image sources with a cache-busting query parameter
+      function updateImages() {
+        const images = document.querySelectorAll(".camera-stream");
+        images.forEach((img) => {
+          const src = img.src.split("?")[0];
+          img.src = `${src}?timestamp=${new Date().getTime()}`;
+        });
+      }
+
+      // Function to synchronize updates with the start of each new minute plus 10 seconds
+      function synchronizeUpdates() {
+        const now = new Date();
+        const secondsUntilNextMinute = 60 - now.getSeconds();
+        const millisecondsUntilNextMinute = secondsUntilNextMinute * 1000;
+        const delay = millisecondsUntilNextMinute + 10000; // 10 seconds after the next minute
+
+        setTimeout(() => {
+          updateImages();
+          setInterval(updateImages, 5 * 60000); // Update images every 60 seconds
+        }, delay);
+      }
+
+      // Start synchronization
+      synchronizeUpdates();
+    </script>
   </body>
 </html>

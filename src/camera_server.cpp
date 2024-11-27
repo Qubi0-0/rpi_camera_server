@@ -50,16 +50,17 @@ void serveHTML(const std::string &filePath, const httplib::Request &, httplib::R
 }
 
 // Function to serve the latest frame (frame.jpg)
-void serveFrame(const httplib::Request &, httplib::Response &res)
+void serveFrame(const std::string &filePath, const httplib::Request &, httplib::Response &res)
 {
-    std::lock_guard<std::mutex> lock(frameMutex); // Ensure thread safety when accessing currentFrame
-    if (!currentFrame.empty())
+    std::ifstream file(filePath, std::ios::binary);
+    if (file)
     {
-        res.set_content(reinterpret_cast<const char *>(currentFrame.data()), currentFrame.size(), "image/jpeg");
+        std::vector<unsigned char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        res.set_content(reinterpret_cast<const char *>(buffer.data()), buffer.size(), "image/jpeg");
     }
     else
     {
-        std::cerr << "Error: Frame not available" << std::endl;
+        std::cerr << "Error: Frame not available at " << filePath << std::endl;
         res.status = 404;
         res.set_content("Frame not available", "text/plain");
     }
@@ -101,22 +102,9 @@ void serveStatic(const std::string &filePath, const std::string &contentType, co
     }
 }
 
-// Function to continuously check and reload the frame.jpg file
-void monitorFrame(const std::string &path)
-{
-    while (true)
-    {
-        loadImage(path);
-        std::this_thread::sleep_for(std::chrono::seconds(1)); // Check every second
-    }
-}
-
 int main()
 {
     httplib::Server server;
-
-    // Start a thread to monitor and reload the frame.jpg file
-    std::thread frameMonitor(monitorFrame, "../frame.jpg");
 
     // Serve the index.html when accessing the root ("/")
     server.Get("/", [](const httplib::Request &req, httplib::Response &res)
@@ -125,9 +113,6 @@ int main()
     // Serve the mlg.html when accessing "/mlg.html"
     server.Get("/mlg.html", [](const httplib::Request &req, httplib::Response &res)
                { serveHTML("../mlg.html", req, res); });
-
-    // Serve the current frame ("/frame.jpg")
-    server.Get("/frame.jpg", serveFrame);
 
     // Serve the CSS file ("/css/style.css")
     server.Get("/css/style.css", [](const httplib::Request &req, httplib::Response &res)
@@ -149,15 +134,18 @@ int main()
         std::string filePath = "../audio/" + req.matches[1].str();
         serveStatic(filePath, "audio/mpeg", req, res); });
 
+    // Serve frame images
+    server.Get("/frames/(.*)", [](const httplib::Request &req, httplib::Response &res)
+               {
+        std::string filePath = "../frames/" + req.matches[1].str();
+        serveFrame(filePath, req, res); });
+
     std::cout << "Server running at http://localhost:8080" << std::endl;
     if (!server.listen("0.0.0.0", 8080))
     {
         std::cerr << "Error: Failed to start server" << std::endl;
         return 1;
     }
-
-    // Join the frame monitor thread before exiting
-    frameMonitor.join();
 
     return 0;
 }
