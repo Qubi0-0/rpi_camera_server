@@ -8,7 +8,7 @@ timestamp=$(date +"%d_%m_%Y_%H:%M")
 output_dir="$base_dir"
 
 # Exposure times (shutter time)
-shutter_times=(1000 5000 10000 20000 50000 100000 200000 500000 1000000)
+shutter_times=(500 1000 5000 10000 20000 100000 200000 500000 1000000)
   # Shutter time in milliseconds
 
 # Loop to take photos
