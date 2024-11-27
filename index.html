@@ -114,30 +114,36 @@
     </main>
     <footer></footer>
     <script>
-      // Function to update the image sources with a cache-busting query parameter
-      function updateImages() {
-        const images = document.querySelectorAll(".camera-stream");
-        images.forEach((img) => {
-          const src = img.src.split("?")[0];
-          img.src = `${src}?timestamp=${new Date().getTime()}`;
-        });
-      }
+	// Funkcja aktualizująca obrazy z cache-busting
+	function updateImages() {
+	  const images = document.querySelectorAll(".camera-stream");
+	  images.forEach((img) => {
+	    const src = img.src.split("?")[0];
+	    img.src = `${src}?timestamp=${new Date().getTime()}`;
+	  });
+	}
 
-      // Function to synchronize updates with the start of each new minute plus 10 seconds
-      function synchronizeUpdates() {
-        const now = new Date();
-        const secondsUntilNextMinute = 60 - now.getSeconds();
-        const millisecondsUntilNextMinute = secondsUntilNextMinute * 1000;
-        const delay = millisecondsUntilNextMinute + 10000; // 10 seconds after the next minute
+	// Funkcja synchronizująca aktualizacje z wybranymi minutami
+	function synchronizeUpdates() {
+	  const now = new Date();
 
-        setTimeout(() => {
-          updateImages();
-          setInterval(updateImages, 5 * 60000); // Update images every 60 seconds
-        }, delay);
-      }
+	  // Obliczenie czasu do najbliższej "10-minutowej" synchronizacji
+	  const currentMinutes = now.getMinutes();
+	  const nextSyncMinute = Math.ceil((currentMinutes + 1) / 10) * 10 - 8; // Synchronizacja np. 2, 12, 22 minut
+	  const minutesUntilNextSync = (nextSyncMinute - currentMinutes + 60) % 60; // Obsługuje przejście godziny
+	  const millisecondsUntilNextSync = minutesUntilNextSync * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
 
-      // Start synchronization
-      synchronizeUpdates();
+	  // Ustawienie pierwszej aktualizacji po synchronizacji
+	  setTimeout(() => {
+	    updateImages();
+
+	    // Po pierwszej aktualizacji ustawiamy wywołania co 10 minut
+	    setInterval(updateImages, 10 * 60 * 1000); // 10 minut w milisekundach
+	  }, millisecondsUntilNextSync);
+	}
+
+	// Start synchronizacji
+	synchronizeUpdates();
     </script>
   </body>
 </html>
