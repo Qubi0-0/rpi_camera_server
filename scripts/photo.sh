@@ -9,7 +9,6 @@ output_dir="$base_dir"
 
 # Exposure times (shutter time)
 shutter_times=(500 1000 5000 10000 20000 100000 200000 500000 1000000)
-  # Shutter time in milliseconds
 
 # Loop to take photos
 for i in "${!shutter_times[@]}"; do
@@ -25,4 +24,6 @@ done
 
 echo "Photo taking process completed! Photos saved in directory: $output_dir"
 mkdir -p /home/qubi/images/temp/$timestamp
-cp -r /home/qubi/projects/camera_server/frames/* /home/qubi/images/temp/$timestamp
+
+# copy frames for later investigation for best exposure
+# cp -r /home/qubi/projects/camera_server/frames/* /home/qubi/images/temp/$timestamp
